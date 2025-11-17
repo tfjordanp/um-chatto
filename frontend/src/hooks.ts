@@ -1,14 +1,28 @@
-import { useEffect, useRef, type EffectCallback } from "react"
+import { useEffect, useRef, useState, type EffectCallback } from "react"
 
 
 export function useOnMountUnsafe(effect: EffectCallback) {
-  const initialized = useRef(false)
+  const initializedCount = useRef(0);
 
   useEffect(() => {
-    if (!initialized.current) {
-      initialized.current = true
-      effect()
+    
+    if (import.meta.env.DEV){
+      if (initializedCount.current <= 1){
+        initializedCount.current++;
+        if (initializedCount.current === 2)   return effect();
+      }
     }
+    else{
+      return effect();
+    }
+    
   }, [])
 }
 
+
+export function useModalState(defaultValue:boolean){
+    const [ show , setShow ] = useState(defaultValue);
+    const handleClose = () => setShow(false);
+    const handleShow = () => setShow(true);
+    return { show, setShow, handleClose, handleShow};
+}

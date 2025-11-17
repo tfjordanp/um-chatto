@@ -1,7 +1,7 @@
 import firebase from 'firebase/compat/app';
 import * as firebaseui from 'firebaseui';
 import 'firebaseui/dist/firebaseui.css';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import { useModalState, useOnMountUnsafe } from '../hooks';
 import { useNavigate } from 'react-router-dom';
 

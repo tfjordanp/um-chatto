@@ -1,31 +1,14 @@
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import {
-  MainContainer,
-  ChatContainer,
-  MessageList,
-  Message,
-  MessageInput,
-} from "@chatscope/chat-ui-kit-react";
+import SideContactsContainer from "../components/SideContactsContainer";
+import MainChatContainer from "../components/MainChatContainer";
+
 
 function Chat(){
+    
     return (
-        <div style={{ position: "relative", height: "100%" }}>
-            <MainContainer>
-                <ChatContainer>
-                <MessageList>
-                    <Message
-                    model={{
-                        message: "Hello my friend",
-                        sentTime: "just now",
-                        sender: "Joe",
-                        direction: 'incoming',
-                        position:'first'
-                    }}
-                    />
-                </MessageList>
-                <MessageInput placeholder="Type message here" />
-                </ChatContainer>
-            </MainContainer>
+        <div style={{display: "flex",justifyContent: 'left',alignItems:'stretch',height: '100%'}}>
+            <SideContactsContainer list={[{name: 'Jiran',lastSenderName: 'Mark',info: 'Is the Plat ready or is it on the space ?'}]}/>
+            <MainChatContainer style={{flex: 1}}/>
         </div>
     );
 }

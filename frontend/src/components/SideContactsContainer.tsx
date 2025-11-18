@@ -1,43 +1,47 @@
-import { type FC } from 'react';
+import { useState, type FC } from 'react';
 
 import {
   ConversationList,
   Conversation,
   Avatar,
+  Search,
+  Sidebar,
+  
 } from "@chatscope/chat-ui-kit-react";
 
-interface ContactsListElementModel{
-    info?: string;
-    lastSenderName?: string;
-    name: string;
-    profileImageUrl?: string;
-    //lastActivityTime?: Date;
-    /*unreadCnt*/
-}
+import type ContactsListElementModel from './ContactsListElementModel';
 
 interface SideContactsContainerProps extends React.ComponentPropsWithRef<'div'>{
   list: ContactsListElementModel[];
+  modelState: ReturnType<typeof useState<ContactsListElementModel>>;
 }
 
-const SideContactsContainer: FC<SideContactsContainerProps> = ({list,...props}) => {
+const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:[_,setModel],...props}) => {
   return (
-    <ConversationList {...props}>
-        {
-            list.map(d => 
-                <Conversation
-                  info={d.info}
-                  lastSenderName={d.lastSenderName}
-                  name={d.name}
-                  /*lastActivityTime={d.lastActivityTime}*/
-                >
-                    <Avatar
-                      name={d.name}
-                      src={d.profileImageUrl}
-                    />
-                </Conversation>
-            )
-        }
-    </ConversationList>
+    <Sidebar position="left">
+      <Search placeholder="Search..." />
+      <br/>
+      <ConversationList {...props}>
+          {
+              list.map((d,i) => 
+                  <Conversation
+                    info={d.info}
+                    lastSenderName={d.lastSenderName}
+                    name={d.name}
+                    key={i}
+                    onClick={e => setModel(d)}
+                    lastActivityTime={d.lastActivityTime}
+                  >
+                      <Avatar
+                        name={d.name}
+                        src={d.profileImageUrl}
+                        status={d.status}
+                      />
+                  </Conversation>
+              )
+          }
+      </ConversationList>
+    </Sidebar>
   );
 };
 

@@ -13,7 +13,7 @@ import {
 function App() {
   return (
     <div style={{width: '100vw',height: '100vh'}}>
-      <div style={{width: '100%',height: '100%',maxWidth: '640px',marginLeft:'auto',marginRight: 'auto', boxSizing: 'border-box',border: 'solid red',borderRadius: '5rem'}}> 
+      <div style={{width: '100%',height: '100%',marginLeft:'auto',marginRight: 'auto', boxSizing: 'border-box',padding: '1rem 2rem 0rem 2rem',/*border: 'solid red',borderRadius: '5rem'*/}}> 
           <BrowserRouter>
             <Routes>
               <Route path='/' element={<Navigate to='/landing'/>}/>

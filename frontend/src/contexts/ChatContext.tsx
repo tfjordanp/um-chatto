@@ -101,9 +101,11 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
 
         const uid = humanLikeUid.split('-').slice(-1)[0];
 
-        const contactsRef = ref(db, `users/${uid}/contacts`);
+        const mycontactsRef = ref(db, `users/${user.uid}/contacts`);
+        const theirContactsRef = ref(db, `users/${uid}/contacts`);
         
-        const newPostRef = await push(contactsRef, {uid});
+        const newPostRef = await push(mycontactsRef, {uid});
+        const newPostRef2 = await push(theirContactsRef, {uid: user.uid});
 
         return newPostRef.key;
     }

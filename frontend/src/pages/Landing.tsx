@@ -6,7 +6,7 @@ import { useModalState, useOnMountUnsafe } from '../hooks';
 import { useNavigate } from 'react-router-dom';
 
 import { Modal, Button, Spinner, Form,  } from 'react-bootstrap';
-import { getAuth, updateProfile, deleteUser } from 'firebase/auth';
+import { getAuth, updateProfile, deleteUser, type User } from 'firebase/auth';
 import { AuthContext } from '../contexts/AuthContext';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -70,7 +70,7 @@ function Landing() {
             console.log(authResult);
 
             if (authResult?.additionalUserInfo?.isNewUser || !authResult?.user?.displayName){
-                modalState.setShow(true);
+                setTimeout(()=>modalState.setShow(true),500);
                 return false;
             }
             
@@ -117,7 +117,7 @@ function Landing() {
     const inputElementRef = useRef<HTMLInputElement>(null);
     const formElementRef = useRef<HTMLFormElement>(null);
 
-    const { user } = useContext(AuthContext);
+    const { user, updateRTDBInfo } = useContext(AuthContext);
 
     return (
         <div style={{width: '100%',height: '100%',display: 'flex',justifyContent: 'center',alignItems: 'center'}}>
@@ -176,7 +176,7 @@ function Landing() {
                         setBtn2D(true);
                         
                         try{
-                            await updateProfile(user,{displayName: inputElementRef.current?.value});
+                            await updateProfile(getAuth().currentUser || user,{displayName: inputElementRef.current?.value});
                             modalState.handleClose();
                             navigate('/home');
                         }
@@ -186,6 +186,9 @@ function Landing() {
                         
                         setBtn1D(false);
                         setBtn2D(false);
+
+                        console.log(getAuth().currentUser);
+                        await updateRTDBInfo(getAuth().currentUser);
                     }}>
                         Save
                     </Button>

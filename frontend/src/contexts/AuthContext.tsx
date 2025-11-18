@@ -1,11 +1,28 @@
 import { createContext, useState, type JSX } from "react";
 import type React from "react";
 
-import { getAuth, onAuthStateChanged, type User } from "firebase/auth";
+import { getAuth, onAuthStateChanged, type User, } from "firebase/auth";
 import firebase from "firebase/compat/app";
 import { useOnMountUnsafe } from "../hooks";
 
-export const AuthContext = createContext<{user: User | null}>({user: null});
+import { ref, set, getDatabase } from "firebase/database";
+
+export const AuthContext = createContext<{user: User | null,updateRTDBInfo: (user:User|null) => Promise<void>}>
+({user: null,updateRTDBInfo: ()=>Promise.resolve()});
+
+
+async function updateRTDBInfo(user: User|null){
+    if (user){
+        const db = getDatabase();
+        const contactsRef = ref(db, `users/${user.uid}/info`);
+        await set(contactsRef,{
+            displayName: user.displayName,
+            uid: user.uid,
+            photoURL: user.photoURL,
+            email: user.email,
+        } as Pick<User,'displayName'|'uid'|'photoURL'|'email'>);
+    }
+}
 
 const AuthContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
     const [ user, setUser ] = useState<User | null>(null);
@@ -28,12 +45,14 @@ const AuthContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
 
         const auth = getAuth();
         onAuthStateChanged(auth, (user) => {
+            console.log('onAuthStateChanged CALLED');
             setUser(user);
+            updateRTDBInfo(user);
         });
     });
 
     return (
-        <AuthContext.Provider value={{user}}>
+        <AuthContext.Provider value={{user,updateRTDBInfo}}>
             {children}
         </AuthContext.Provider>
     );

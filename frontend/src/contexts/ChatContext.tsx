@@ -1,12 +1,14 @@
 import { createContext, useContext, useState, type JSX } from "react";
 import type React from "react";
 
-import { getDatabase, ref, push, set, serverTimestamp, onValue } from "firebase/database";
+import { getDatabase, ref, push, set, serverTimestamp, onValue, get } from "firebase/database";
 import { useOnMountUnsafe } from "../hooks";
 import { AuthContext } from "./AuthContext";
 
 interface ChatContextValue{
     sendMessage: (message: Omit<Message,'srcId'|'timestamp'>) => Promise<any>;
+    addContact: (uid:string) => Promise<any>;
+    listAllContacts: () => Promise<string[]>;
 }
 
 export const ChatContext = createContext<ChatContextValue | null>(null);
@@ -56,6 +58,26 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
         }, { onlyOnce: false }); // Set to true if you only need it once
     });
 
+    async function getDataAtPath(path:string) {
+        const dataRef = ref(db, path);
+
+        try {
+            const snapshot = await get(dataRef);
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                //console.log(`Data at path '${path}':`, data);
+                return data;
+            } 
+            else {
+                console.log(`No data available at path: '${path}'`);
+                return null;
+            }
+        } catch (error) {
+            console.error(`Error retrieving data from path '${path}':`, error);
+            throw error;
+        }
+    }
+
 
     async function sendMessage(message: Omit<Message,'srcId'|'timestamp'>){
         if (!user)  return ;
@@ -74,6 +96,26 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
         };
     }
 
+    async function addContact(humanLikeUid: string){
+        if (!user)  return ;
+
+        const uid = humanLikeUid.split('-').slice(-1)[0];
+
+        const contactsRef = ref(db, `users/${uid}/contacts`);
+        
+        const newPostRef = await push(contactsRef, {uid});
+
+        return newPostRef.key;
+    }
+
+    async function listAllContacts() {
+        return (await getDataAtPath(`users/${user?.uid}/contacts`)) || [];
+    }
+
+    async function getProfile(uid:string) {
+        return (await getDataAtPath(`users/${uid}/info`)) as (Pick<NonNullable<typeof user>,'displayName'|'uid'|'photoURL'|'email'> | null);
+    }
+
     /*async function sendIsTypingSignal(dstUID:string) {
         
     }*/
@@ -81,7 +123,7 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
 
 
     return (
-        <ChatContext.Provider value={{sendMessage}}>
+        <ChatContext.Provider value={{sendMessage,addContact,listAllContacts}}>
             {children}
         </ChatContext.Provider>
     );

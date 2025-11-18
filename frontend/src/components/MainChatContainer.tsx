@@ -17,19 +17,20 @@ interface MainChatContainerProps extends React.ComponentPropsWithRef<'div'>{
     modelState: ReturnType<typeof useState<ContactsListElementModel>>;
 }
 
-const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[_,setModel],...props}) => {
+const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,setModel],...props}) => {
   return (
     <div style={{ position: "relative", height: "100%",...style}} {...props}>
         <ChatContainer>
             <ConversationHeader>
                 <ConversationHeader.Back onClick={e => setModel(undefined)} />
                 <Avatar
-                    name="Emily"
-                    src="https://chatscope.io/storybook/react/assets/emily-xzL8sDL2.svg"
+                    name={model?.name}
+                    src={model?.profileImageUrl}
+                    status={model?.status}
                 />
                 <ConversationHeader.Content
-                    info="Active 10 mins ago"
-                    userName="Emily"
+                    info="Online"
+                    userName={model?.name}
                 />
                 <ConversationHeader.Actions>
                     <InfoButton title="Show info" />
@@ -44,7 +45,7 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[_,setM
                     textAlign: "center",
                     fontSize: "1.2em"
                     }}>
-                        This is custom content placed instead of message list
+                        This chat is empty. Leave a message to begin a conversation !!
                 </MessageList.Content>
                 <Message
                     model={{

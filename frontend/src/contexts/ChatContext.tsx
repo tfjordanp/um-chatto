@@ -121,6 +121,9 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
     /*async function sendIsTypingSignal(dstUID:string) {
         
     }*/
+    /*async function sendIsOnlineSignal(dstUID:string) {
+        
+    }*/
 
 
 

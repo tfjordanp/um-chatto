@@ -47,7 +47,7 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
                     status={model?.status}
                 />
                 <ConversationHeader.Content
-                    info="Online"
+                    info={model?.status=='available' ? 'Online' : 'Offline'}
                     userName={model?.name}
                 />
                 <ConversationHeader.Actions>

@@ -19,6 +19,16 @@ interface ChatContextValue{
         adder: string;
     }[]) => Promise<void>): () => void;
     onMessagesChanged(listener: (list: Message[]) => Promise<void>): () => void;
+
+    sendIsOnlineSignal(): Promise<void>;
+    readIsOnlineSignal(uid: string): Promise<{
+        timestamp: number;
+    }>
+
+    serverTimeMs: {
+        get: () => number;
+    };
+
 }
 
 export const ChatContext = createContext<ChatContextValue | null>(null);
@@ -173,8 +183,22 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
     /*async function sendIsTypingSignal(dstUID:string) {
         
     }*/
-    /*async function sendIsOnlineSignal(dstUID:string) {
+    async function sendIsOnlineSignal() {
+        if (!user)  return ;
+
+        const onlineRef = ref(db, `users/${user.uid}/online`);
         
+        await set(onlineRef, {timestamp: serverTimeMs.get()/*serverTimestamp()*/});
+    }
+
+    async function readIsOnlineSignal(uid:string){
+        return await getDataAtPath(`users/${uid}/online`) as {timestamp:number} || {timestamp: 0};
+    }
+
+    /*function onOnlineSignal(uid:string,listener: (obj:{timestamp: number}) => void) {
+        return listenToRtdbPath(`users/${uid}/online`,snapshot => {
+            listener(snapshot.val() || {timestamp: -Infinity});
+        });
     }*/
 
 
@@ -189,6 +213,9 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
             listAllMessages,
             onContactsChanged,
             onMessagesChanged,
+            sendIsOnlineSignal,
+            readIsOnlineSignal,
+            serverTimeMs,
         }}>
             {children}
         </ChatContext.Provider>

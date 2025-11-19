@@ -1,12 +1,13 @@
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import SideContactsContainer from "../components/SideContactsContainer";
 import MainChatContainer from "../components/MainChatContainer";
-import ChatContextProvider from "../contexts/ChatContext";
-import { useState } from "react";
+import ChatContextProvider, { ChatContext } from "../contexts/ChatContext";
+import { useContext, useState } from "react";
 
 import { MainContainer } from "@chatscope/chat-ui-kit-react";
 
 import type ContactsListElementModel from '../components/ContactsListElementModel';
+import { useOnMountUnsafe } from "../hooks";
 
 const list:ContactsListElementModel[]  = [
     {
@@ -50,6 +51,7 @@ const list:ContactsListElementModel[]  = [
 
 function Chat(){
     const modelState = useState<ContactsListElementModel | undefined>();
+
     return (
         <ChatContextProvider>
             <MainContainer responsive>

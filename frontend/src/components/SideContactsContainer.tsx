@@ -96,6 +96,35 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
       });
   },[]);
 
+  useOnMountUnsafe(() => {
+      const id = setInterval(async ()=>{
+          await chat?.sendIsOnlineSignal();
+          //console.log('Is online signal sent');
+      },5000);
+      return () => clearInterval(id);
+  });
+
+  useEffect(() => {
+    setInterval(() => {
+      setHumanContacts(humanContacts => {
+        (async () =>{
+          if (!chat)  return ;
+          setHumanContacts(await Promise.all(humanContacts.map(
+            async c=>{
+              const diff = chat.serverTimeMs.get() - (await chat.readIsOnlineSignal(c.uid||''))?.timestamp;
+              //console.log('DIFF',c.name,diff);
+              //console.log(c.name,new Date(chat.serverTimeMs.get()),new Date((await chat.readIsOnlineSignal(c.uid||''))?.timestamp));
+              
+              const status:NonNullable<typeof c.status> = diff > 5*60*1000 ? 'unavailable' : (diff <= 10*1000 ? 'available' : 'away');
+              return {...c,status};
+            }
+          )));
+        })();
+        return humanContacts;
+      });
+    },7500);
+  },[]);
+
   return (
     <Sidebar position="left">
       <div style={{width: '100%',display: 'flex',justifyContent: 'space-around',alignItems: 'stretch',padding:'1rem 1rem'}}>

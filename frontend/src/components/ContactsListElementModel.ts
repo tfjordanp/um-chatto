@@ -8,6 +8,7 @@ export default interface ContactsListElementModel{
     isBot?: boolean;
     lastActivityTime?: string;
     status?: UserStatus;
+    uid?: string;
     //lastActivityTime?: Date;
     /*unreadCnt*/
 }

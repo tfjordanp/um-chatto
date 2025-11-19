@@ -10,8 +10,15 @@ interface ChatContextValue{
     sendMessage: (message: Omit<Message,'srcId'|'timestamp'>) => Promise<any>;
     addContact: (uid:string) => Promise<any>;
     listAllContacts: () => Promise<{uid:string,adder:string}[]>;
+    listAllMessages: () => Promise<Message[]>;
     getProfile: (uid:string) => Promise<Pick<User,'displayName'|'uid'|'photoURL'|'email'> | null>;
     normalizeId: (humanLikeUid:string) => string;
+
+    onContactsChanged(listener: (list: {
+        uid: string;
+        adder: string;
+    }[]) => Promise<void>): () => void;
+    onMessagesChanged(listener: (list: Message[]) => Promise<void>): () => void;
 }
 
 export const ChatContext = createContext<ChatContextValue | null>(null);
@@ -151,13 +158,13 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
         return (await getDataAtPath(`users/${uid}/info`)) as (Pick<NonNullable<typeof user>,'displayName'|'uid'|'photoURL'|'email'> | null);
     }
 
-    function onContactsChanged(listener: (list: Awaited<ReturnType<ChatContextValue['listAllContacts']>>) => void) {
+    function onContactsChanged(listener: (list: Awaited<ReturnType<ChatContextValue['listAllContacts']>>) => Promise<void>) {
         return listenToRtdbPath(`users/${user?.uid}/contacts`,snapshot => {
             listener(Object.values(snapshot.val() || {}));
         });
     }
 
-    function onMessagesChanged(listener: (list: Awaited<ReturnType<ChatContextValue['listAllContacts']>>) => void) {
+    function onMessagesChanged(listener: (list: Awaited<ReturnType<ChatContextValue['listAllMessages']>>) => void) {
         return listenToRtdbPath(`users/${user?.uid}/messages`,snapshot => {
             listener(Object.values(snapshot.val()));
         });
@@ -173,7 +180,16 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
 
 
     return (
-        <ChatContext.Provider value={{sendMessage,addContact,listAllContacts,getProfile,normalizeId}}>
+        <ChatContext.Provider value={{
+            sendMessage,
+            addContact,
+            listAllContacts,
+            getProfile,
+            normalizeId,
+            listAllMessages,
+            onContactsChanged,
+            onMessagesChanged,
+        }}>
             {children}
         </ChatContext.Provider>
     );

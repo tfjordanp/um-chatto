@@ -1,4 +1,4 @@
-import { useContext, useRef, useState, type FC } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState, type FC } from 'react';
 
 import {
   ConversationList,
@@ -12,7 +12,7 @@ import {
 } from "@chatscope/chat-ui-kit-react";
 
 import type ContactsListElementModel from './ContactsListElementModel';
-import { useModalState } from '../hooks';
+import { useModalState, useOnMountUnsafe } from '../hooks';
 import { Button, Form, Modal, Toast, ToastContainer } from 'react-bootstrap';
 import { ChatContext } from '../contexts/ChatContext';
 import { AuthContext } from '../contexts/AuthContext';
@@ -32,6 +32,61 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
   const chat = useContext(ChatContext);
   const { user } = useContext(AuthContext);
 
+  const [ humanContacts, setHumanContacts ] = useState<ContactsListElementModel[]>([]);
+  const mergedList = useMemo(() => humanContacts.concat(list),[list,humanContacts]);
+
+  useOnMountUnsafe(()=>{
+    return chat?.onContactsChanged(async list => {
+      setHumanContacts(await Promise.all(list.map(async ({uid}) => {
+        const profile = await chat?.getProfile(uid);
+        const messages = (await chat?.listAllMessages())
+        .filter(m => m.srcId === uid || m.dstId === uid)
+        .toSorted((m1,m2) => +m1.timestamp - +m2.timestamp);
+        
+        const lastSenderName =  messages.length
+        ? (messages.slice(-1)[0].srcId === user?.uid ? user.displayName : profile?.displayName) || ''
+        : undefined;
+
+        const info =  messages.length
+        ? (messages.slice(-1)[0].text)
+        : undefined;
+
+        const model:ContactsListElementModel = {
+          'isBot': false,
+          'name': profile?.displayName || '',
+          'profileImageUrl': profile?.photoURL || `https://api.dicebear.com/9.x/initials/svg?seed=${profile?.displayName?.replaceAll(/\s*/g,'')}`,
+          lastSenderName,
+          info, 
+          uid,
+        }
+        return model;
+      })));
+    });
+  });
+
+  /*useEffect(()=>{
+      return chat?.onMessagesChanged(async list => {
+          //console.log(list,model?.uid);
+          setHumanContacts(await Promise.all(humanContacts.map(async c => {
+            const uid = c.uid;
+            const profile = {displayName: c.name};
+
+            const messages = list
+            .filter(m => m.srcId === uid || m.dstId === uid)
+            .toSorted((m1,m2) => +m1.timestamp - +m2.timestamp);
+
+            const lastSenderName =  messages.length
+            ? (messages.slice(-1)[0].srcId === user?.uid ? user.displayName : profile?.displayName) || ''
+            : undefined;
+
+            const info =  messages.length
+            ? (messages.slice(-1)[0].text)
+            : undefined;
+            return {...c,lastSenderName,info};
+          })));
+      });
+  },[humanContacts]);*/
+
   return (
     <Sidebar position="left">
       <div style={{width: '100%',display: 'flex',justifyContent: 'space-around',alignItems: 'stretch',padding:'1rem 1rem'}}>
@@ -44,7 +99,7 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
       <br/>
       <ConversationList {...props}>
           {
-              list.map((d,i) => 
+              mergedList.map((d,i) => 
                   <Conversation
                     info={d.info}
                     lastSenderName={d.lastSenderName}

@@ -14,7 +14,6 @@ import {
 import type ContactsListElementModel from './ContactsListElementModel';
 import {ChatContext} from '../contexts/ChatContext';
 import {AuthContext} from '../contexts/AuthContext';
-import { useOnMountUnsafe } from '../hooks';
 
 interface MainChatContainerProps extends React.ComponentPropsWithRef<'div'>{
     modelState: ReturnType<typeof useState<ContactsListElementModel>>;
@@ -67,23 +66,38 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
                         }}>
                             This chat is empty. Leave a message to begin a conversation !!
                     </MessageList.Content>
-                    : messages.map((m,i) => 
-                    <Message
-                        key={i}
-                        model={{
-                            message: m.text,
-                            sentTime: "just now",
-                            sender: (m.srcId===user?.uid ? user.displayName : model?.name) || '',
-                            direction: (m.srcId===user?.uid ? 'outgoing' : 'incoming'),
-                            position: 'last'
-                        }}
-                    >
-                        <Avatar
-                            name={(m.srcId===user?.uid ? user.displayName : model?.name) || ''}
-                            src={m.srcId===user?.uid ? `https://api.dicebear.com/9.x/initials/svg?seed=${user?.displayName?.replaceAll(/\s*/g,'')}` : model?.profileImageUrl}
-                            size='sm'
-                        />
-                    </Message>)
+                    : messages.map((m,i) => {
+                        const shouldShowImage = 
+                        messages.length === 0 ||
+                        i === messages.length-1 ||
+                        messages[i+1].srcId !== messages[i].srcId;
+
+                        return <Message
+                            key={i}
+                            avatarSpacer={!shouldShowImage}
+                            model={{
+                                message: m.text,
+                                sentTime: "just now",
+                                sender: (m.srcId===user?.uid ? user.displayName : model?.name) || '',
+                                direction: (m.srcId===user?.uid ? 'outgoing' : 'incoming'),
+                                position: 'last'
+                            }}
+                        >
+                            {
+                                shouldShowImage && 
+                                <Avatar
+                                    name={(m.srcId===user?.uid ? user.displayName : model?.name) || ''}
+                                    src={
+                                        m.srcId===user?.uid 
+                                        ? `https://api.dicebear.com/9.x/initials/svg?seed=${user?.displayName?.replaceAll(/\s*/g,'')}`
+                                        : model?.profileImageUrl
+                                    }
+                                    size='sm'
+                                />
+                            }
+                            
+                        </Message>;
+                    })
                 }
             </MessageList>
             <MessageInput placeholder="Type message here" onSend={message => {

@@ -19,7 +19,8 @@ const list:ContactsListElementModel[]  = [
         `,
         isBot: true,
         status: 'available',
-        profileImageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Liliana"
+        profileImageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Liliana",
+        uid: 'robot-1'
     },
     {
         name: 'Listenr',
@@ -32,7 +33,8 @@ const list:ContactsListElementModel[]  = [
         `,
         isBot: true,
         status: 'available',
-        profileImageUrl: "https://api.dicebear.com/9.x/fun-emoji/svg?seed=Sawyer"
+        profileImageUrl: "https://api.dicebear.com/9.x/fun-emoji/svg?seed=Sawyer",
+        uid: 'robot-2'
     },
     {
         name: 'Parrot',
@@ -45,7 +47,8 @@ const list:ContactsListElementModel[]  = [
         `,
         isBot: true,
         status: 'available',
-        profileImageUrl: "https://api.dicebear.com/9.x/micah/svg?seed=Kimberly"
+        profileImageUrl: "https://api.dicebear.com/9.x/micah/svg?seed=Kimberly",
+        uid: 'robot-3'
     },
 ];
 

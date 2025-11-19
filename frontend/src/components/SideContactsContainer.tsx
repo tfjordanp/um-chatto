@@ -12,7 +12,7 @@ import {
 } from "@chatscope/chat-ui-kit-react";
 
 import type ContactsListElementModel from './ContactsListElementModel';
-import { useModalState, useOnMountUnsafe } from '../hooks';
+import { setIntervalImmediate, useModalState, useOnMountUnsafe } from '../hooks';
 import { Button, Form, Modal, Toast, ToastContainer } from 'react-bootstrap';
 import { ChatContext } from '../contexts/ChatContext';
 import { AuthContext } from '../contexts/AuthContext';
@@ -106,8 +106,8 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
       return () => clearInterval(id);
   });
 
-  useEffect(() => {
-    setInterval(() => {
+  useOnMountUnsafe(() => {
+    const id = setInterval(() => {
       setHumanContacts(humanContacts => {
         (async () =>{
           if (!chat)  return ;
@@ -129,7 +129,8 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
         return humanContacts;
       });
     },7500);
-  },[]);
+    return () => clearInterval(id);
+  });
 
   return (
     <Sidebar position="left">

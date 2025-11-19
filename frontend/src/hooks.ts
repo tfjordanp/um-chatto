@@ -26,3 +26,10 @@ export function useModalState(defaultValue:boolean){
     const handleShow = () => setShow(true);
     return { show, setShow, handleClose, handleShow};
 }
+
+export function setIntervalImmediate(cb:TimerHandler,timeout:number,...args:any[]){
+  if (typeof cb == 'string')  return ;
+  
+  cb(...args);
+  return setInterval(cb,timeout,args);
+}

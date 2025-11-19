@@ -10,5 +10,5 @@ export default interface ContactsListElementModel{
     status?: UserStatus;
     uid?: string;
     //lastActivityTime?: Date;
-    /*unreadCnt*/
+    unreadCnt?: number;
 }

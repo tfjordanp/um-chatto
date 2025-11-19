@@ -8,12 +8,12 @@ import {
   ConversationHeader,
   InfoButton,
   Avatar,
-  
 } from "@chatscope/chat-ui-kit-react";
 
 import type ContactsListElementModel from './ContactsListElementModel';
 import {ChatContext} from '../contexts/ChatContext';
 import {AuthContext} from '../contexts/AuthContext';
+import React from "react";
 
 interface MainChatContainerProps extends React.ComponentPropsWithRef<'div'>{
     modelState: ReturnType<typeof useState<ContactsListElementModel>>;
@@ -26,8 +26,12 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
   const [ messages, setMessages ] = useState<Awaited<ReturnType<Exclude<typeof chat,null>['listAllMessages']>>>([]);
 
   useEffect(()=>{
+        if (!model?.uid)    return ;
+        chat?.sendHasSeenSignal(model.uid);
         return chat?.onMessagesChanged(async list => {
             //console.log(list,model?.uid);
+            if (!model?.uid)    return ;
+            chat?.sendHasSeenSignal(model.uid);
             setMessages(list
                 .filter(m => m.dstId===model?.uid || m.srcId===model?.uid)
                 .toSorted((m1,m2) => +m1.timestamp - +m2.timestamp)
@@ -100,8 +104,10 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
                     })
                 }
             </MessageList>
-            <MessageInput placeholder="Type message here" onSend={message => {
-                chat?.sendMessage({'dstId': model?.uid || '','text': message});
+            <MessageInput placeholder="Type message here" onSend={async message => {
+                if (!model?.uid)    return ;
+                await chat?.sendMessage({'dstId': model?.uid || '','text': message});
+                await chat?.sendHasSeenSignal(model?.uid || '');
             }} />
         </ChatContainer>
     </div>

@@ -67,6 +67,14 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
     });
   });
 
+  useEffect(() => {
+    (async () =>
+    setHumanContacts(await Promise.all(humanContacts.map(async c => {
+      if (c.uid === model?.uid)   return {...c,unreadCnt:0};
+      return {...c};
+    }))))();
+  },[model]);
+
   useEffect(()=>{
       return chat?.onMessagesChanged(async list => {
           //console.log(list,model?.uid);
@@ -75,11 +83,30 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
               setHumanContacts(
                 await Promise.all(humanContacts.map(async c => {
                   const uid = c.uid;
+                  if (!uid)   return {...c};
+
                   const profile = {displayName: c.name};
 
                   const messages = list
                   .filter(m => m.srcId === uid || m.dstId === uid)
                   .toSorted((m1,m2) => +m1.timestamp - +m2.timestamp);
+
+                  const lastSeen = await chat?.readHasSeenSignal(uid);
+                  let unread = 0;
+                  for (const m of messages){
+                    if (Number(m.timestamp) > (lastSeen?.timestamp||0))   ++unread;
+                  }
+
+                  const currentModel = await new Promise<ContactsListElementModel | undefined>((resolve) => {
+                    setModel(model => {
+                      resolve(model);
+                      return model;
+                    });
+                  });
+
+                  if (currentModel?.uid === uid){
+                    unread = 0;
+                  }
 
                   const lastSenderName =  messages.length
                   ? (messages.slice(-1)[0].srcId === user?.uid ? user.displayName : profile?.displayName) || ''
@@ -89,7 +116,7 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
                   ? (messages.slice(-1)[0].text)
                   : undefined;
                   console.log('MESSAGES CHANGED COMPLETE');
-                  return {...c,lastSenderName,info};
+                  return {...c,lastSenderName,info,unreadCnt: unread};
                 }))
             ))();
 
@@ -107,6 +134,8 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
   });
 
   useOnMountUnsafe(() => {
+    //Check Online Status
+
     const id = setInterval(() => {
       setHumanContacts(humanContacts => {
         (async () =>{
@@ -153,6 +182,7 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
                     onClick={e => setModel(d)}
                     className={d.uid === model?.uid ? 'conversation selected' : ''}
                     lastActivityTime={d.lastActivityTime}
+                    unreadCnt={d.unreadCnt}
                   >
                       <Avatar
                         name={d.name}

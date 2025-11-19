@@ -29,6 +29,12 @@ interface ChatContextValue{
         get: () => number;
     };
 
+    sendHasSeenSignal(uid: string): Promise<void>;
+
+    readHasSeenSignal(uid: string): Promise<{
+        timestamp: number;
+    } | undefined>
+
 }
 
 export const ChatContext = createContext<ChatContextValue | null>(null);
@@ -195,6 +201,20 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
         return await getDataAtPath(`users/${uid}/online`) as {timestamp:number} || {timestamp: 0};
     }
 
+    async function sendHasSeenSignal(uid:string) {
+        if (!user)  return ;
+
+        const onlineRef = ref(db, `users/${user.uid}/seen/${uid}`);
+        
+        await set(onlineRef, {timestamp: serverTimestamp()/*serverTimeMs.get()*/});
+    }
+
+    async function readHasSeenSignal(uid:string){
+        if (!user)  return ;
+
+        return await getDataAtPath(`users/${user.uid}/seen/${uid}`) as {timestamp:number} || {timestamp: 0};
+    }
+
     /*function onOnlineSignal(uid:string,listener: (obj:{timestamp: number}) => void) {
         return listenToRtdbPath(`users/${uid}/online`,snapshot => {
             listener(snapshot.val() || {timestamp: -Infinity});
@@ -216,6 +236,8 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
             sendIsOnlineSignal,
             readIsOnlineSignal,
             serverTimeMs,
+            sendHasSeenSignal,
+            readHasSeenSignal,
         }}>
             {children}
         </ChatContext.Provider>

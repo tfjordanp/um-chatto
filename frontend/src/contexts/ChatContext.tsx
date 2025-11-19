@@ -1,14 +1,17 @@
 import { createContext, useContext, useState, type JSX } from "react";
 import type React from "react";
 
-import { getDatabase, ref, push, set, serverTimestamp, onValue, get } from "firebase/database";
+import { getDatabase, ref, push, set, serverTimestamp, onValue, get, DataSnapshot, type DatabaseReference, off } from "firebase/database";
 import { useOnMountUnsafe } from "../hooks";
 import { AuthContext } from "./AuthContext";
+import type { User } from "firebase/auth";
 
 interface ChatContextValue{
     sendMessage: (message: Omit<Message,'srcId'|'timestamp'>) => Promise<any>;
     addContact: (uid:string) => Promise<any>;
-    listAllContacts: () => Promise<string[]>;
+    listAllContacts: () => Promise<{uid:string,adder:string}[]>;
+    getProfile: (uid:string) => Promise<Pick<User,'displayName'|'uid'|'photoURL'|'email'> | null>;
+    normalizeId: (humanLikeUid:string) => string;
 }
 
 export const ChatContext = createContext<ChatContextValue | null>(null);
@@ -21,6 +24,8 @@ interface Message{
     dstId: string;
     timestamp: any;
 }
+
+//Class::toJSON, Class::dataObject
 
 const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
 
@@ -78,6 +83,24 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
         }
     }
 
+    function listenToRtdbPath(path: string,callback: (snapshot: DataSnapshot) => void): () => void {
+        const dbRef: DatabaseReference = ref(db, path);
+
+        // Attach the listener
+        const unsubscribe = onValue(dbRef, (snapshot) => {
+            callback(snapshot);
+        }, (error) => {
+            console.error(`Error listening to path '${path}':`, error);
+        });
+
+        // Return a function to easily detach the listener later
+        return () => {
+            unsubscribe();
+            //off(dbRef,'value', unsubscribe);
+            //console.log(`Listener detached for path: ${path}`);
+        };
+    }
+
 
     async function sendMessage(message: Omit<Message,'srcId'|'timestamp'>){
         if (!user)  return ;
@@ -96,26 +119,48 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
         };
     }
 
+    function normalizeId(humanLikeUid:string) {
+        return humanLikeUid.split('-').slice(-1)[0];
+    }
+
     async function addContact(humanLikeUid: string){
         if (!user)  return ;
 
-        const uid = humanLikeUid.split('-').slice(-1)[0];
+        const uid = normalizeId(humanLikeUid);
+
+        if (!(await getProfile(uid)))   throw new Error('User doesn\'t exists on CHATTO');
 
         const mycontactsRef = ref(db, `users/${user.uid}/contacts`);
         const theirContactsRef = ref(db, `users/${uid}/contacts`);
         
-        const newPostRef = await push(mycontactsRef, {uid});
-        const newPostRef2 = await push(theirContactsRef, {uid: user.uid});
+        const newPostRef = await push(mycontactsRef, {uid,adder: user.uid});
+        const newPostRef2 = await push(theirContactsRef, {uid: user.uid,adder: user.uid});
 
         return newPostRef.key;
     }
 
     async function listAllContacts() {
-        return (await getDataAtPath(`users/${user?.uid}/contacts`)) || [];
+        return Object.values(await getDataAtPath(`users/${user?.uid}/contacts`) || {}) as any[] || [];
+    }
+
+    async function listAllMessages(){
+        return Object.values(await getDataAtPath(`users/${user?.uid}/messages`) || {}) as Message[] || [];
     }
 
     async function getProfile(uid:string) {
         return (await getDataAtPath(`users/${uid}/info`)) as (Pick<NonNullable<typeof user>,'displayName'|'uid'|'photoURL'|'email'> | null);
+    }
+
+    function onContactsChanged(listener: (list: Awaited<ReturnType<ChatContextValue['listAllContacts']>>) => void) {
+        return listenToRtdbPath(`users/${user?.uid}/contacts`,snapshot => {
+            listener(Object.values(snapshot.val() || {}));
+        });
+    }
+
+    function onMessagesChanged(listener: (list: Awaited<ReturnType<ChatContextValue['listAllContacts']>>) => void) {
+        return listenToRtdbPath(`users/${user?.uid}/messages`,snapshot => {
+            listener(Object.values(snapshot.val()));
+        });
     }
 
     /*async function sendIsTypingSignal(dstUID:string) {
@@ -128,7 +173,7 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
 
 
     return (
-        <ChatContext.Provider value={{sendMessage,addContact,listAllContacts}}>
+        <ChatContext.Provider value={{sendMessage,addContact,listAllContacts,getProfile,normalizeId}}>
             {children}
         </ChatContext.Provider>
     );

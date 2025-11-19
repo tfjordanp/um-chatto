@@ -77,7 +77,13 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
                             direction: (m.srcId===user?.uid ? 'outgoing' : 'incoming'),
                             position: 'last'
                         }}
-                    />)
+                    >
+                        <Avatar
+                            name={(m.srcId===user?.uid ? user.displayName : model?.name) || ''}
+                            src={m.srcId===user?.uid ? `https://api.dicebear.com/9.x/initials/svg?seed=${user?.displayName?.replaceAll(/\s*/g,'')}` : model?.profileImageUrl}
+                            size='sm'
+                        />
+                    </Message>)
                 }
             </MessageList>
             <MessageInput placeholder="Type message here" onSend={message => {

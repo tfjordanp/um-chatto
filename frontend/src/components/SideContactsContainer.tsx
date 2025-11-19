@@ -17,12 +17,14 @@ import { Button, Form, Modal, Toast, ToastContainer } from 'react-bootstrap';
 import { ChatContext } from '../contexts/ChatContext';
 import { AuthContext } from '../contexts/AuthContext';
 
+import './styles.css';
+
 interface SideContactsContainerProps extends React.ComponentPropsWithRef<'div'>{
   list: ContactsListElementModel[];
   modelState: ReturnType<typeof useState<ContactsListElementModel>>;
 }
 
-const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:[_,setModel],...props}) => {
+const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:[model,setModel],...props}) => {
 
   const modalState = useModalState(false);
   const infoModalState = useModalState(false);
@@ -119,6 +121,10 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
               return {...c,status};
             }
           )));
+          setHumanContacts(humanContacts => {
+            setModel(d => humanContacts.find(c=>c.uid===d?.uid));
+            return humanContacts;
+          });
         })();
         return humanContacts;
       });
@@ -144,6 +150,7 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
                     name={d.name}
                     key={i}
                     onClick={e => setModel(d)}
+                    className={d.uid === model?.uid ? 'conversation selected' : ''}
                     lastActivityTime={d.lastActivityTime}
                   >
                       <Avatar

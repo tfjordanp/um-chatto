@@ -166,7 +166,7 @@ const ChatContextProvider: React.FC<{children: JSX.Element}> = ({children}) => {
 
     function onMessagesChanged(listener: (list: Awaited<ReturnType<ChatContextValue['listAllMessages']>>) => void) {
         return listenToRtdbPath(`users/${user?.uid}/messages`,snapshot => {
-            listener(Object.values(snapshot.val()));
+            listener(Object.values(snapshot.val() || {}));
         });
     }
 

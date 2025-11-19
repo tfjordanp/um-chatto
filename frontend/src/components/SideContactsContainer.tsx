@@ -61,31 +61,40 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
         }
         return model;
       })));
+      console.log('CONTACTS CHANGED COMPLETE');
     });
   });
 
-  /*useEffect(()=>{
+  useEffect(()=>{
       return chat?.onMessagesChanged(async list => {
           //console.log(list,model?.uid);
-          setHumanContacts(await Promise.all(humanContacts.map(async c => {
-            const uid = c.uid;
-            const profile = {displayName: c.name};
+          setHumanContacts(humanContacts => {
+            (async () => 
+              setHumanContacts(
+                await Promise.all(humanContacts.map(async c => {
+                  const uid = c.uid;
+                  const profile = {displayName: c.name};
 
-            const messages = list
-            .filter(m => m.srcId === uid || m.dstId === uid)
-            .toSorted((m1,m2) => +m1.timestamp - +m2.timestamp);
+                  const messages = list
+                  .filter(m => m.srcId === uid || m.dstId === uid)
+                  .toSorted((m1,m2) => +m1.timestamp - +m2.timestamp);
 
-            const lastSenderName =  messages.length
-            ? (messages.slice(-1)[0].srcId === user?.uid ? user.displayName : profile?.displayName) || ''
-            : undefined;
+                  const lastSenderName =  messages.length
+                  ? (messages.slice(-1)[0].srcId === user?.uid ? user.displayName : profile?.displayName) || ''
+                  : undefined;
 
-            const info =  messages.length
-            ? (messages.slice(-1)[0].text)
-            : undefined;
-            return {...c,lastSenderName,info};
-          })));
+                  const info =  messages.length
+                  ? (messages.slice(-1)[0].text)
+                  : undefined;
+                  console.log('MESSAGES CHANGED COMPLETE');
+                  return {...c,lastSenderName,info};
+                }))
+            ))();
+
+            return humanContacts;
+          })
       });
-  },[humanContacts]);*/
+  },[]);
 
   return (
     <Sidebar position="left">

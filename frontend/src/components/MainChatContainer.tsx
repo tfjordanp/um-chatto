@@ -25,8 +25,14 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
   
   const [ messages, setMessages ] = useState<Awaited<ReturnType<Exclude<typeof chat,null>['listAllMessages']>>>([]);
 
-  useEffect(()=>{
+  useEffect(()=>{    
         if (!model?.uid)    return ;
+        
+        if (model?.isBot){
+            setMessages([]);
+            return ;
+        }
+        
         chat?.sendHasSeenSignal(model.uid);
         return chat?.onMessagesChanged(async list => {
             //console.log(list,model?.uid);
@@ -40,7 +46,7 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
     },[model?.uid]);
 
   return (
-    <div style={{ position: "relative", height: "100%",...style}} {...props}>
+    model && <div style={{ position: "relative", height: "100%",...style}} {...props}>
         <ChatContainer>
             <ConversationHeader>
                 <ConversationHeader.Back onClick={e => setModel(undefined)} />
@@ -105,7 +111,7 @@ const MainChatContainer: FC<MainChatContainerProps> = ({style,modelState:[model,
                 }
             </MessageList>
             <MessageInput placeholder="Type message here" onSend={async message => {
-                if (!model?.uid)    return ;
+                if (!model?.uid || model.isBot)    return ;
                 await chat?.sendMessage({'dstId': model?.uid || '','text': message});
                 await chat?.sendHasSeenSignal(model?.uid || '');
             }} />

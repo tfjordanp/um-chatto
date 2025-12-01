@@ -68,6 +68,7 @@ const SideContactsContainer: FC<SideContactsContainerProps> = ({list,modelState:
   });
 
   useEffect(() => {
+    if (model?.isBot)   return ;
     (async () =>
     setHumanContacts(await Promise.all(humanContacts.map(async c => {
       if (c.uid === model?.uid)   return {...c,unreadCnt:0};

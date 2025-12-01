@@ -4,6 +4,6 @@ Backend: <b>Firebase</b>
 
 Works entirely on client side without passing through a custom server.
 
-<img src="https://github.com/tfjordanp/um-clinic-manager/blob/main/assets/image.png?raw=true"/>
+<img src="https://github.com/tfjordanp/um-chatto/blob/main/assets/image.png?raw=true"/>
 
-<a href="https://github.com/tfjordanp/um-clinic-manager/blob/main/assets/demo2.mp4?raw=true">VIDEO DEMO LINK</a>
+<a href="https://github.com/tfjordanp/um-chatto/blob/main/assets/demo2.mp4?raw=true">VIDEO DEMO LINK</a>

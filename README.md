@@ -1,5 +1,7 @@
 An ubiquitous chat web application written in Typescript.
+<br>
 Frontend: <b>React + @chatscope Chat UI Kit</b>
+<br>
 Backend: <b>Firebase</b>
 
 Works entirely on client side without passing through a custom server.
